@@ -1,0 +1,20 @@
+# Secretos: nunca se suben
+.env
+
+# Entorno y caché de Python
+.venv/
+__pycache__/
+.pytest_cache/
+
+# La base se crea desde datos/gastos.csv al usarse
+*.db
+
+# Sistema
+.DS_Store
+
+# La interfaz web se versiona COMPILADA: al repo solo entra web/dist.
+# El fuente (src, package.json, configs) queda fuera de git; para regenerar el dist
+# hay que compilar en tu equipo con `pnpm --dir web build`.
+web/*
+!web/dist
+!web/.gitignore
