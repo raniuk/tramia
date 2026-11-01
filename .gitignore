@@ -18,3 +18,6 @@ __pycache__/
 web/*
 !web/dist
 !web/.gitignore
+
+# Registro de skills generado por gentle-ai: no se versiona
+.atl/
