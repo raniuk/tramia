@@ -19,6 +19,7 @@ Orienta en lenguaje natural sobre dos trámites de la **División de Títulos y 
 - Avisa si la ficha del catálogo **no se revisa hace más de 180 días**, y muestra cuándo se revisó y qué cambió en el catálogo.
 - Si el trámite no está en el catálogo, lo dice; no inventa requisitos, costos ni plazos.
 - Aclara que es un **prototipo independiente**: orienta, no confirma ni realiza trámites.
+- Además responde **consultas generales** con la capability `apis`: inflación anual de un país (Banco Mundial) y temperatura actual de La Paz (Open Meteo), siempre citando la fuente.
 
 Prueba estas preguntas:
 - «¿Qué necesito para sacar mi diploma académico?»
@@ -33,7 +34,7 @@ El alcance completo del proyecto está en **[docs/tramia.md](docs/tramia.md)** (
 
 ### Lo que quedó de la plantilla
 
-La plantilla del curso sigue en el repositorio como material de estudio, pero **no está conectada al agente**:
+La plantilla del curso sigue en el repositorio como material de estudio. `apis` está conectada al agente; `consulta`, `registro` y `documentos` todavía no:
 
 | Trae | Sesión | Dónde |
 |---|---|---|

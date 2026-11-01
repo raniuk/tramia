@@ -4,7 +4,7 @@ Este repositorio es la plantilla del trabajo final del curso «Más allá de los
 
 TRAMIA también tiene web React y login sin base de datos. Un único servidor `api.py` (uvicorn) sirve web/API y recibe Telegram en `/telegram`; `bot.py` solo define los handlers. En local, Telegram hace polling únicamente con `TELEGRAM_POLLING_LOCAL=true` (borra el webhook de Render); en Render se registra el webhook con `RENDER_EXTERNAL_URL`.
 
-En esta copia ya se personalizó como **TRAMIA**, un orientador de trámites de la **División de Títulos y Diplomas** de la UMSA. La capability `tramites` (con `listar_tramites` y `consultar_tramite`) y su catálogo `TRAMITES` están en `capacidades.py`; el alcance completo está en `docs/tramia.md`. Las capabilities de práctica (`apis`, `consulta`, `registro`, `documentos`) siguen en el código, pero no están conectadas al agente.
+En esta copia ya se personalizó como **TRAMIA**, un orientador de trámites de la **División de Títulos y Diplomas** de la UMSA. La capability `tramites` (con `listar_tramites` y `consultar_tramite`) y su catálogo `TRAMITES` están en `capacidades.py`; el alcance completo está en `docs/tramia.md`. También está conectada la capability `apis` (inflación del Banco Mundial y clima de Open Meteo). Las de práctica `consulta`, `registro` y `documentos` siguen en el código, pero no están conectadas al agente.
 
 **Antes de proponer o cambiar código, lee `.agents/skills/asistente-pydantic-ai/SKILL.md`** y la referencia que corresponda en esa carpeta.
 Los comandos de arranque antiguos de ese material de clase (`uv run bot.py`, dos servicios) no aplican a esta personalización: usa los de este archivo y `WEB.md`.

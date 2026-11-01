@@ -55,12 +55,21 @@ def inflacion(pais: str, anio: int) -> dict:
 
 
 @apis.tool_plain
-def clima_cochabamba() -> dict:
-    """Temperatura actual de Cochabamba, según Open Meteo."""
-    params = {"latitude": -17.38, "longitude": -66.15, "current": "temperature_2m"}
+def clima_la_paz() -> dict:
+    """Temperatura actual de La Paz, Bolivia, según Open Meteo."""
+    params = {
+        "latitude": -16.5,
+        "longitude": -68.15,
+        "current": "temperature_2m",
+        "timezone": "America/La_Paz",
+    }
     respuesta = httpx.get("https://api.open-meteo.com/v1/forecast", params=params, timeout=10)
     respuesta.raise_for_status()
-    return {"temperatura": respuesta.json()["current"]["temperature_2m"], "fuente": "Open Meteo"}
+    return {
+        "lugar": "La Paz",
+        "temperatura": respuesta.json()["current"]["temperature_2m"],
+        "fuente": "Open Meteo",
+    }
 
 
 # ═══ S1 · Mi contador: gastos en SQLite, una tool que lee y otra que escribe ══════════
