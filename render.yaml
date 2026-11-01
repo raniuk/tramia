@@ -1,0 +1,25 @@
+# Un solo servicio: FastAPI sirve la web, la API y el webhook de Telegram.
+# Render define RENDER_EXTERNAL_URL; api.py registra allí el webhook al arrancar.
+services:
+  - type: web
+    name: tramia
+    runtime: python
+    plan: free
+    buildCommand: uv sync --locked --no-dev
+    startCommand: uv run --no-sync uvicorn api:app --host 0.0.0.0 --port $PORT
+    envVars:
+      # El código arranca en MODO=deepseek: esta clave es obligatoria.
+      - key: DEEPSEEK_API_KEY
+        sync: false
+      # Solo para volver a Gemini (MODO=gemini) o para los embeddings del RAG.
+      # MODO no se fija aquí a propósito: con un value en este archivo Render la bloquea.
+      - key: GEMINI_API_KEY_LOCAL
+        sync: false
+      - key: TELEGRAM_TOKEN
+        sync: false
+      - key: TELEGRAM_PERMITIDOS
+        sync: false
+      - key: SESION_SECRETO
+        generateValue: true
+      - key: COOKIE_SEGURA
+        value: "true"
