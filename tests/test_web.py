@@ -3,7 +3,9 @@
 Sin modelo real ni red, igual que el resto: `uv run pytest`.
 """
 
+import json
 import os
+import secrets
 from types import SimpleNamespace
 
 os.environ.setdefault("GEMINI_API_KEY_LOCAL", "clave-de-prueba")  # para importar sin .env
@@ -40,10 +42,23 @@ def usuario_de_prueba(monkeypatch):
     sesion._INTENTOS.clear()
 
 
+def otras_credenciales() -> tuple[str, str]:
+    """Credenciales nuevas en cada prueba: nunca valores fijos que parezcan reales."""
+    return f"{secrets.token_hex(4)}@ejemplo.test", secrets.token_urlsafe(12)
+
+
 @pytest.fixture
 def credenciales() -> tuple[str, str]:
     """Simula el único modo de obtener credenciales: /acceso en Telegram."""
     return sesion.emitir_acceso(123, "Estudiante de prueba")
+
+
+@pytest.fixture
+def acceso_configurado(monkeypatch) -> tuple[str, str]:
+    """Configura ACCESO_WEB como en producción, con un correo y una clave al azar."""
+    correo, clave = otras_credenciales()
+    monkeypatch.setattr(settings, "acceso_web", SecretStr(f"{correo}:{clave}"))
+    return correo, clave
 
 
 def cliente() -> httpx.AsyncClient:
@@ -81,9 +96,10 @@ async def test_login_incorrecto_no_devuelve_cookie(credenciales):
 
 
 async def test_login_solo_acepta_claves_emitidas_por_telegram(monkeypatch):
-    monkeypatch.setenv("USUARIOS", "estudiante@umsa.bo:hash-antiguo:Estudiante")
+    correo, clave = otras_credenciales()
+    monkeypatch.setenv("USUARIOS", f"{correo}:hash-antiguo:Estudiante")
     async with cliente() as c:
-        respuesta = await c.post("/api/auth/login", json={"email": "estudiante@umsa.bo", "password": "tramia2026"})
+        respuesta = await c.post("/api/auth/login", json={"email": correo, "password": clave})
     assert respuesta.status_code == 401  # la variable antigua ya no permite entrar
 
 
@@ -109,9 +125,9 @@ async def test_datos_pedidos_en_telegram_permiten_entrar_en_la_web(monkeypatch):
         assert (await c.get("/api/auth/me")).json()["user"]["displayName"] == "Estudiante"
 
 
-async def test_las_credenciales_configuradas_se_entregan_y_funcionan(monkeypatch):
+async def test_las_credenciales_configuradas_se_entregan_y_funcionan(monkeypatch, acceso_configurado):
     monkeypatch.setattr(settings, "telegram_permitidos", "123")
-    monkeypatch.setattr(settings, "acceso_web", SecretStr("estudiante@umsa.bo:tramia2026"))
+    correo, clave = acceso_configurado
     enviados = []
 
     async def reply_text(texto):
@@ -123,25 +139,25 @@ async def test_las_credenciales_configuradas_se_entregan_y_funcionan(monkeypatch
         message=SimpleNamespace(reply_text=reply_text),
     )
     await bot.acceso(update, None)
-    assert "Correo: estudiante@umsa.bo" in enviados[-1]
-    assert "Contraseña: tramia2026" in enviados[-1]
+    assert f"Correo: {correo}" in enviados[-1]
+    assert f"Contraseña: {clave}" in enviados[-1]
 
     async with cliente() as c:
         respuesta = await c.post(
-            "/api/auth/login", json={"email": "Estudiante@UMSA.bo", "password": "tramia2026"}
+            "/api/auth/login", json={"email": correo.upper(), "password": clave}
         )
         assert respuesta.status_code == 200
         assert (await c.get("/api/auth/me")).status_code == 200
         # sigue funcionando en un segundo ingreso: no se consume
         async with cliente() as otro:
-            otra = await otro.post("/api/auth/login", json={"email": "estudiante@umsa.bo", "password": "tramia2026"})
+            otra = await otro.post("/api/auth/login", json={"email": correo, "password": clave})
             assert otra.status_code == 200
 
 
-async def test_las_credenciales_configuradas_rechazan_otra_clave(monkeypatch):
-    monkeypatch.setattr(settings, "acceso_web", SecretStr("estudiante@umsa.bo:tramia2026"))
+async def test_las_credenciales_configuradas_rechazan_otra_clave(acceso_configurado):
+    correo, _ = acceso_configurado
     async with cliente() as c:
-        respuesta = await c.post("/api/auth/login", json={"email": "estudiante@umsa.bo", "password": "otra"})
+        respuesta = await c.post("/api/auth/login", json={"email": correo, "password": "otra"})
     assert respuesta.status_code == 401
 
 
@@ -182,7 +198,10 @@ async def test_logout_cierra_la_sesion(credenciales):
 
 
 async def test_cookie_manipulada_no_sirve():
-    assert sesion.leer_sesion("eyJ1IjoiZXN0dWRpYW50ZUB1bXNhLmJvIn0.firma-falsa") is None
+    correo, _ = otras_credenciales()
+    # Contenido bien formado, pero con una firma que no sale de SESION_SECRETO.
+    contenido = sesion._base64(json.dumps({"u": correo}, separators=(",", ":")).encode())
+    assert sesion.leer_sesion(f"{contenido}.firma-falsa") is None
     assert sesion.leer_sesion(None) is None
 
 
